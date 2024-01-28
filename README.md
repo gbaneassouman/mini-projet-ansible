@@ -193,7 +193,7 @@ Maintenant que les prérequis sont en place nous pouvons créer nos différents 
 $ mkdir mini-projet-ansible && cd mini-projet-ansible
 $ mkdir -p host_vars group_vars roles
 ```
-#### 2.1 Rôles des dossiers
+### 2.1 Rôles des répertoires
 ------------------------
  - **group_vars** est le répertoire qui permet de définir des variables pour les groupes d'hôtes et de déployer des `plays/tasks` Ansible sur chaque hôte/groupe. Les fichiers dans le répertoire `group_var` doivent correspondre aux noms de groupes defini dans le fichier d'inventaire.
 
@@ -207,7 +207,7 @@ $ mkdir -p host_vars group_vars roles
 
 Procédons à la création des fichiers ci-dessous:
 
-- `prod.yml` dans le dossier `group_vars` c'est dans ce fichier que nous allons déclarer les variables à appliquer au groupe nommé `prod` 
+- `prod.yml` dans le dossier `group_vars`
 - `client2.yml` dans le dossier `host_vars`
 - `deploy.yml`, `inventory.yml` et `ansible.cfg` dans le dossier racine `mini-projet-ansible`
 
@@ -227,11 +227,11 @@ Passons à l'édition de nos fichiers précédemment crées.
 ```
 ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
 ```
-cet argument aide `ansible` à contrôler les connexions aux machines. mettre cet argument à `no` invite `ssh` à ajouter automatiquement de nouvelles clés d'hôte dans le fichiers `~/.ssh/known_hosts`. En le faisant ainsi on désactive la validation de la clé au niveau de `l'inventaire` , on peut aussi le faire globalement en ajoutant `host_key_checking = False` dans `/etc/ansible/ansible.cfg` 
+cet argument aide `ansible` à contrôler les connexions aux machines. mettre cet argument à `no` invite `ssh` à ajouter automatiquement les clés d'hôte dans le fichiers `~/.ssh/known_hosts`. En le faisant ainsi on désactive la validation de la clé au niveau de `l'inventaire` , on peut aussi le faire globalement en ajoutant `host_key_checking = False` dans `/etc/ansible/ansible.cfg` 
 
 **b - host_vars/client2.yml**
 
-- `client2.yml` c'est dans ce fichier que seront déclarés les variables liés à l'hôte ` client2`, il s'agit de son adresse ip et des paramètres de connexion.
+- `client2.yml` c'est dans ce fichier que seront déclarés les variables liés à l'hôte ` client2`, il s'agit de son adresse ip et des paramètres de connexion. on n'a bésoin de spécifier le mot de passe car à l'installation des VMs il y'a eu un échange des clés `SSH`
 
 
 *copier et coller le contenu ci-dessous*
@@ -239,7 +239,6 @@ cet argument aide `ansible` à contrôler les connexions aux machines. mettre ce
 ---
 ansible_host: 192.168.56.12
 ansible_user: vagrant
-ansible_password: vagrant
 ```
 **c - inventory.yml**
 - `inventory.yml` est le fichier dans lequel nous allons faire l' inventaire de nos `hôtes`, `groupe d'hôtes` et de la `relation d'enfant entre groupe`.
@@ -350,7 +349,7 @@ Un rôle `Ansible` suit une structure de répertoires définie, un rôle est nom
 - `templates`: contient des modèles (jinja2) qui peuvent être déployés via ce rôle.
 - `meta`: définit certaines métadonnées pour ce rôle.
 - `README.md`: inclut une description générale du fonctionnement du rôle.
-- `test`: contient un playbook (on peut cependant déposer notre playbook à la racine du projet ou dans un dossier sous un nom différent).
+- `tests`: contient un playbook (on peut cependant déposer notre playbook à la racine du projet ou dans un dossier sous un nom différent).
 
 ### 3.4 - Mise en place de notre Webapp
 Nous allons commencer par supprimer les répertoires dont nous n'avons pas bésoin ici. **(files, handlers, meta)**
@@ -386,7 +385,7 @@ roles/webapp/tasks/
 ├── install-docker.yml
 └── main.yml
 ```
-- `main.yml` : c'est le fichier principal de nos tâches, dans ce fichier nous feront appel aux tâches définies dans les fichiers `centos-setup.yml` et `install-docker.yml` avec `include_tasks`. Ces deux tâches vont d'abord préparer le système d'exploitation et installer `docker` sur celui-ci ensuite on procède à la copie de `index.html.j2` et au déploiment du conteneur en se basant sur les valeurs définies dans le fichier `defaults/main.yml`.
+- `main.yml` : c'est le fichier principal de nos tâches, dans ce fichier nous feront appel aux tâches définies dans les fichiers `centos-setup.yml` et `install-docker.yml` avec l'argument `include_tasks`. Ces deux tâches vont d'abord préparer le système d'exploitation et installer `docker` sur celui-ci ensuite on procède à la copie de `index.html.j2` et au déploiment du conteneur en se basant sur les valeurs définies dans le fichier `defaults/main.yml`.
 
 **contenu de tasks/main.yml**
 ```
@@ -408,7 +407,7 @@ roles/webapp/tasks/
         - "/home/{{ system_user }}/index.html:/usr/local/apache2/htdocs/index.html"
 ```
 
-- `install-docker.yml` : Ce fichier permet d'installer l'environnement necéssaire à l'exécution de docker sur notre système d'exploitation. Il installe *docker engine, docker-compose, python pour docker *(docker-py) et démarre docker en même temps que le système* .
+- `install-docker.yml` : Ce fichier permet d'installer l'environnement necéssaire à l'exécution de docker sur notre système d'exploitation. Il installe *docker engine, docker-compose, python pour docker (docker-py)* et démarre docker en même temps que le système .
 
 **contenu de tasks/install-docker.yml**
 ```
@@ -487,18 +486,39 @@ Bienvenue sur le site {{ ansible_hostname }}
 Pour tester notre deploiement nous allons copier le code ci-dessous dans le ficher `tests/test.yml`
 ```
 ---
-- name: Test
-- hosts: "prod"
-  remote_user: "vagrant"
+- name: Test Website
+  hosts: prod
+  remote_user: vagrant
   tasks:
-    - name: check website
-      uri:
-        url: http://192.168.56.12
-        status_code: 200
+  - name: Website Test
+    uri:
+      url: http://192.168.56.12
+      status_code: 200
 ```
-Nous tentons une connexion au site via url si la réponse est 200 ça veut que tout est bon sinon il y'a un problème.
+Nous allons tenter une connexion au site via l'url `http://192.168.56.12` si la réponse est 200 ça veut que tout est bon sinon il y'a un problème.
+
+**Test de connection au site**
+```
+ansible-playbook -i inventory.yml roles/webapp/tests/test.yml
+```
+*Résultat*
+
+```
+PLAY [Test Website] *********************************************************************************************************************************
+
+TASK [Gathering Facts] ******************************************************************************************************************************
+ok: [client2]
+
+TASK [Website Test] *********************************************************************************************************************************
+ok: [client2]
+
+PLAY RECAP ******************************************************************************************************************************************
+client2                    : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 
+```
+`ok=2` : Deux Tâches ont été exécutées `TASK [Gathering Facts]` et `TASK [Website Test]` donc la connexion est ok 
 
 ## 4 - Déploiement 
+
 ### 4.1 Test de connectivité à l'hôte du groupe Prod
 ```
 ansible prod -i inventory.yml -m ping
@@ -516,7 +536,7 @@ client2 | SUCCESS => {
 ### 4.2 Déploiement de Webapp
 Pour le déploiment nous allons utiliser la commande `ansible-playbook`
 
-Le déploiment se fera sur la base des tâches définies dans le fichier `deploy.yml` sur les hôtes définis dans le fichier `inventory.yml`. 
+Le déploiment se fera sur la base des tâches définies dans le fichier `deploy.yml` et sur les hôtes définis dans le fichier `inventory.yml`. 
 
 **a - Exécution**
 ```
