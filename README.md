@@ -1,5 +1,6 @@
 Mini Projet Ansible : Créer votre rôle webapp
 =============================================
+<img src="screenshots/ansible.png" height="120px" weight=400px>
 
 Vous avez reçu la demande d'une equipe qui souhaiterait utiliser votre playbook webapp, mais sous forme de rôle car sous cette forme ils pourront mieux variabiliser et adapter à leur situation
 
@@ -58,7 +59,7 @@ end
 ### Code déploiement de Ansible
 --------------------------------
 
-copier et coller le code ci-dessous dans le fichier `install_ansible`
+copier et coller le code ci-dessous dans le fichier `install_ansible.sh`
 ```
 #!/bin/bash
 yum -y update
@@ -90,8 +91,9 @@ if [[ !(-z "$ENABLE_ZSH")  &&  ($ENABLE_ZSH == "true") ]]
 fi
 echo "For this Stack, you will use $(ip -f inet addr show enp0s8 | sed -En -e 's/.*inet ([0-9.]+).*/\1/p') IP Address"
 ```
-### Déploiement des VMs (ansible , client1 & client2)
-----------------------------------------------
+### 1.1 Déploiement des VMs (ansible , client1 & client2)
+-----------------------------------------------------
+Le déploiement se fera avec la commande `vagrant`
 ```
 $ cd vagrant && vagrant up
 ```
@@ -139,7 +141,7 @@ Bringing machine 'client2' up with 'virtualbox' provider...
 ==> ansible: Running provisioner: shell...
     ansible: Running: /tmp/vagrant-shell20240126-12352-e1wmpr.sh
 ```
-### Installation de Ansible sur la VM ansible
+### 1.2 Installation de Ansible sur la VM ansible
 ```
 ansible: Collecting ansible
     ansible:   Downloading ansible-4.10.0.tar.gz (36.8 MB)
@@ -180,30 +182,10 @@ ansible: Collecting ansible
     ansible: Installing collected packages: pycparser, pyparsing, MarkupSafe, cffi, resolvelib, PyYAML, packaging, jinja2, cryptography, ansible-core, ansible
     ansible: Successfully installed MarkupSafe-2.0.1 PyYAML-6.0.1 ansible-4.10.0 ansible-core-2.11.12 cffi-1.15.1 cryptography-40.0.2 jinja2-3.0.3 packaging-21.3 pycparser-2.21 pyparsing-3.1.1 resolvelib-0.5.4
 ```
-### Vérification
+### 1.3 Vérification
 ![](screenshots/virtualbox.png)
 
-
-| Parameter | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `api_key` | `string` | **Required**. Your API key |
-
-#### Get item
-
-```http
-  GET /api/items/${id}
-```
-
-| Parameter | Type     | Description                       |
-| :-------- | :------- | :-------------------------------- |
-| `id`      | `string` | **Required**. Id of item to fetch |
-
-#### add(num1, num2)
-
-Takes two numbers and returns the sum.
-
-
-## 2 - Création des dossiers host_vars, group_vars et rôles
+## 2 - Création des dossiers et fichiers utiles
 
 Maintenant que les prérequis sont en place nous pouvons créer nos différents dossiers `group_vars`, `host_vars` et `rôles`
 
@@ -211,7 +193,7 @@ Maintenant que les prérequis sont en place nous pouvons créer nos différents 
 $ mkdir mini-projet-ansible && cd mini-projet-ansible
 $ mkdir -p host_vars group_vars roles
 ```
-#### Rôles des dossiers
+#### 2.1 Rôles des dossiers
 ------------------------
  - **group_vars** est le répertoire qui permet de définir des variables pour les groupes d'hôtes et de déployer des `plays/tasks` Ansible sur chaque hôte/groupe. Les fichiers dans le répertoire `group_var` doivent correspondre aux noms de groupes defini dans le fichier d'inventaire.
 
@@ -220,7 +202,8 @@ $ mkdir -p host_vars group_vars roles
 - **roles** Ce répertoire permet de charger automatiquement les `variables`, `fichiers`, `tâches`, `handlers` et autres `artefacts` Ansible associés en fonction d'une structure de fichiers connue. Après avoir regroupé notre contenu en rôles, nous pouvons facilement les réutiliser et les partager avec d'autres utilisateurs.
 
 > **NB:** Le nom des fichiers `YAML` dans `group_vars` doivent correspondre au groupe défini dans l'inventaire et les fichiers `YAML` dans `host_vars` doivent également être nommés exactement comme les hôtes de l'inventaire.
-## 3 - Création des différents fichiers
+
+### 2.2 - Création des différents fichiers
 
 Procédons à la création des fichiers ci-dessous:
 
@@ -233,17 +216,24 @@ $ touch mini-projet-ansible/{deploy.yml, inventory.yml, ansible.cfg}
 $ touch mini-projet-ansible/group_vars/prod.yml
 $ touch mini-projet-ansible/host_vars/client2.yml
 ```
-#### Contenu et Rôles des fichiers
+#### 2.2.1 Contenu et Rôles des fichiers
 ----------------------------------
 Passons à l'édition de nos fichiers précédemment crées.
+
+**a - group_vars/prod.yml**
 - `prod.yml` c'est dans ce fichier que nous allons déclarer les variables à appliquer au groupe nommé `prod` 
+
 *copier et coller le contenu ci-dessous*
 ```
 ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
 ```
-cet argument aide `ansible` à contrôler les connexions aux machines. mettre cet argument à `no` invite `ssh` à ajouter automatiquement de nouvelles clés d'hôte dans le fichiers `~/.ssh/known_hosts`. En le faisant ainsi on désactive le contrôle au niveau `inventaire` , on peut aussi le faire globalement en ajoutant `host_key_checking = False` dans `/etc/ansible/ansible.cfg`
+cet argument aide `ansible` à contrôler les connexions aux machines. mettre cet argument à `no` invite `ssh` à ajouter automatiquement de nouvelles clés d'hôte dans le fichiers `~/.ssh/known_hosts`. En le faisant ainsi on désactive la validation de la clé au niveau de `l'inventaire` , on peut aussi le faire globalement en ajoutant `host_key_checking = False` dans `/etc/ansible/ansible.cfg` 
 
-- `client2.yml` c'est dans ce fichier que seront déclarés les variables liés à l'hôte ` client2`, il s'agit de son adresse ip et des paramètres de connexion 
+**b - host_vars/client2.yml**
+
+- `client2.yml` c'est dans ce fichier que seront déclarés les variables liés à l'hôte ` client2`, il s'agit de son adresse ip et des paramètres de connexion.
+
+
 *copier et coller le contenu ci-dessous*
 ```
 ---
@@ -251,7 +241,9 @@ ansible_host: 192.168.56.12
 ansible_user: vagrant
 ansible_password: vagrant
 ```
+**c - inventory.yml**
 - `inventory.yml` est le fichier dans lequel nous allons faire l' inventaire de nos `hôtes`, `groupe d'hôtes` et de la `relation d'enfant entre groupe`.
+
 *contenu inventory.yml*
 ```
 all:
@@ -260,7 +252,9 @@ all:
       hosts:
         client2:
 ```   
+
 `all` est le parent de tous les groupes , il à pour enfant `(children)` le groupe `prod` et `l'hôte` `client2` appartient au groupe `prod`.
+
 
 *vérification*
 ```
@@ -270,7 +264,31 @@ mini-projet-ansible$ ansible-inventory -i inventory.yml --graph
   |--@prod:
   |  |--client2
 ```
+
+**d - ansible.cfg**
+
+- `ansible.cfg`: c'est le fichier de configuration qui declare comment se comporter dans le projet pour le répertoire en cours. `Ansible` commence par lire dans le répertoire courant pour trouver `ansible.cfg`, s'il ne trouve pas il cherche dans le **home directory** de l'utilisateur courant sinon il cherche dans `/etc/ansible/ansible.cfg`.  `ansible.cfg` dans les projets sera surchargé par la configuration de base `/etc/ansible/ansible.cfg`
+> **NB:** `/etc/ansible/ansible.cfg` ne doit être modifier en aucun cas sinon une quelconque modification pourra impacter toute l'insfrastructure
+
+
+*contenu du ansible.cfg*
+```
+[defaults]
+host_key_checking = False
+inventory = $PWD/inventory.yml
+roles_path = $PWD/roles
+deprecation_warnings=False
+```
+
+- `host_key_checking = False` : Désactive la validation de la clé publique lors des connexion `ssh`
+- `inventory` : Permet de localiser le fichier inventaire
+- `roles_path` : Permet de localiser le Rôle `Webapp`
+- `deprecation_warnings=False` : Désactive les message d'avertissement
+
+**e - deploy.yml**
 - `deploy.yml` est notre `playbook`, c'est ce fichier qui indique à `Ansible` les tâches à exécuter sur les hôtes ,c'est donc dans ce même fichier que nous allons inclure notre rôle `webapp`
+
+
 *contenu du deploy.yml*
 ```
 ---
@@ -284,12 +302,11 @@ mini-projet-ansible$ ansible-inventory -i inventory.yml --graph
 - `hosts`: les hôtes sur lesquels seront exécutées les tâches ici ce sont les hôtes du groupe `prod` 
 - `become`: Permet d'exécuter des tâches avec les privilèges d'un autre user tel que `root`.
 - `roles`: Permet d'inclure des rôles
-- `ansible.cfg`: c'est le fichier de configuration qui declare comment se comporter dans le projet pour le répertoire en cours. `Ansible` commence par lire dans le répertoire courant pour trouver `ansible.cfg`, s'il ne trouve pas il cherche dans le **home directory** de l'utilisateur courant sinon il cherche dans `/etc/ansible/ansible.cfg`.  `ansible.cfg` dans les projets sera surchargé par la configuration de base `/etc/ansible/ansible.cfg`
-> **NB:** `/etc/ansible/ansible.cfg` ne doit être modifier en aucun cas sinon une quelconque modification pourra impacter toute l'insfrastructure
+
 
 ## 3 - Rôle Webapp
-### 3.1) - Création de notre Rôle Webapp
-Le rôle est un élément `Ansible` comprenant des fichiers et a pour but de faciliter la réutilisation, la modularité de la configuration des `playbook`.
+### 3.1 - Création de notre Rôle Webapp
+Le rôle est un élément `Ansible` comprenant une structure de fichiers et a pour but de faciliter la réutilisation, la modularité de la configuration des `playbook`.
 
 nous allons utiliser la commande `ansible-galaxy` pour créer la structure de notre rôle :
 ```
@@ -299,7 +316,7 @@ Résultat
 ```
 Role roles/webapp was created successfully
 ```
-### 3.2) - Structure du rôle webapp
+### 3.2 - Structure du rôle webapp
 ```
 webapp/
 ├── defaults
@@ -323,7 +340,7 @@ webapp/
 ```
 Un rôle `Ansible` suit une structure de répertoires définie, un rôle est nommé par le répertoire de niveau supérieur. les sous-répertoires contiennent des fichiers `YAML`, nommés `main.yml` à l'exception de `files` et `templates`.
 
-### 3.3) - Rôle des répertoires
+### 3.3 - Rôle des répertoires
 - `defaults`: contient les variables par défaut pour le rôle.
 - `tasks`: contient les taches à appliquer.
 - `handlers`: contient les handlers, les actions à déclencher.
@@ -335,12 +352,12 @@ Un rôle `Ansible` suit une structure de répertoires définie, un rôle est nom
 - `README.md`: inclut une description générale du fonctionnement du rôle.
 - `test`: contient un playbook (on peut cependant déposer notre playbook à la racine du projet ou dans un dossier sous un nom différent).
 
-### 3.4) - Mise en place de notre Webapp
+### 3.4 - Mise en place de notre Webapp
 Nous allons commencer par supprimer les répertoires dont nous n'avons pas bésoin ici. **(files, handlers, meta)**
 ```
 $ rm -rf roles/webapp/{files,handlers,meta}
 ```
-#### 3.4.1) - définition des variables par défaut *(defaults/main.yml)*
+#### 3.4.1 - définition des variables par défaut *(defaults/main.yml)*
 ```
 ---
 # defaults variables
@@ -357,7 +374,7 @@ Dans ce fichier nous avons défini des variables par défaut qui sont:
 - `file_template`: le fichier `jinja2` par défaut dans le répertoire `templates`
 - `ansible_python_interpreter`: on défini `python3` comme l'interpreter par défaut
 
-#### 3.4.2) - définition des tâches dans le répertoire tasks
+#### 3.4.2 - définition des tâches dans le répertoire tasks
 Nous allons créer les fichiers `centos-setup.yml` et `install-docker.yml` dans le répertoire `tasks` en plus de `main.yml`.
 ```
 $ touch tasks/{centos-setup.yml,install-docker.yml}
@@ -392,6 +409,7 @@ roles/webapp/tasks/
 ```
 
 - `install-docker.yml` : Ce fichier permet d'installer l'environnement necéssaire à l'exécution de docker sur notre système d'exploitation. Il installe *docker engine, docker-compose, python pour docker *(docker-py) et démarre docker en même temps que le système* .
+
 **contenu de tasks/install-docker.yml**
 ```
 ---
@@ -431,6 +449,7 @@ roles/webapp/tasks/
     executable: pip3
 ```
 - `centos-setup.yml` :  Ce fichier contient la tâche qui permet d'installer toutes les dépendances necéssaires à l'exécution du rôle webapp. il vérifie la distributon et la version du système d'exploitation avant d'installer les prérequis avec `yum`
+
 **contenu de task/centos-setup.yml**
 ```
 ---
@@ -453,7 +472,7 @@ roles/webapp/tasks/
     - python3-pip    
 
 ```
-#### 3.4.3) - Mise en place du template
+#### 3.4.3 - Mise en place du template
 commençons par créer le fichier `index.html.j2` sous le répertoire `templates`
 ```
 $ touch templates/index.html.j2
@@ -464,7 +483,7 @@ Bienvenue sur le site {{ ansible_hostname }}
 ```
 `ansible_hostname` sera remplacé lors de la copie par le hostname de l'hôte dans le groupe `prod` à savoir `client2`
 
-#### 3.4.4) - Mise en place du test
+#### 3.4.4 - Mise en place du test
 Pour tester notre deploiement nous allons copier le code ci-dessous dans le ficher `tests/test.yml`
 ```
 ---
@@ -495,15 +514,19 @@ client2 | SUCCESS => {
 }
 ```
 ### 4.2 Déploiement de Webapp
-Pour le déploiment nous allons utiliser la commence `ansible-playbook`
+Pour le déploiment nous allons utiliser la commande `ansible-playbook`
 
-Le déploiment sur la base des tâches définies dans le fichier `deploy.yml` sur les hôtes définis dans le fichier `inventory.yml`. 
+Le déploiment se fera sur la base des tâches définies dans le fichier `deploy.yml` sur les hôtes définis dans le fichier `inventory.yml`. 
+
+**a - Exécution**
 ```
 ansible-playbook -i inventory.yml deploy.yml 
 ```
-**Résultats**
+**b - Résultats**
 
-*Gather Facts* : cette opération d'exécuter le module setup pour extraire des informations telles que (la distributon, la version, l'architecture..) sur le système d'information
+*Gather Facts* 
+
+ cette opération permet d'exécuter le module `setup` pour extraire sur le système d'information des informations telles que la distributon, la version, l'architecture.. 
 ```
 PLAY [Webapp deployment in Production] **************************************************************************************************************
 
@@ -582,5 +605,7 @@ client2                    : ok=12   changed=9    unreachable=0    failed=0    s
 - `changed=9`: 9 tâches ont été exécutées et ont apporté un changement à l'hôte
 - `skipped=1`: 01 tâche n'a pas été exécuté car la condition `when` qui est `false`
 
-## 4 - Test
+## 5 - Test
 ![](screenshots/test-webapp.png)
+
+## Conclusion
