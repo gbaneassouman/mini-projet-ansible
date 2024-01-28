@@ -629,3 +629,7 @@ client2                    : ok=12   changed=9    unreachable=0    failed=0    s
 ![](screenshots/test-webapp.png)
 
 ## Conclusion
+À travers ce projet, nous avons pu aborder les aspects majeurs d'`Ansible`, rendant ainsi
+son utilisation très simple, modulable et très puissante.
+C'est un outil qui se veut simple à l'utilisation mais suffisamment puissant pour
+automatiser des environnements d'applications complexes à plusieurs niveaux.
