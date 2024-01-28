@@ -1,0 +1,6 @@
+---
+- name: Webapp deployment in Production
+  hosts: prod
+  become: true
+  roles:
+    - webapp

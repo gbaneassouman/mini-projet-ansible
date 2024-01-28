@@ -1,0 +1,10 @@
+---
+- name: Test
+- hosts: localhost
+  remote_user: vagrant
+  tasks:
+    - name: check website
+      uri:
+        url: http://192.168.56.12
+        #status_code: 200
+        register: result

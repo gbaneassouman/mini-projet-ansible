@@ -1,0 +1,6 @@
+all:
+  children:
+    prod:
+      hosts:
+        client2:
+    
