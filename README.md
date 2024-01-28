@@ -10,8 +10,8 @@ Leur objectif est que votre rôle possède une playbook tests afin de leur perme
 Prérequis
 ------------
 Pour mener à bien ce projet nous aurons bésoin de:
- - [01 hyperviseur (virtualbox)](https://awesomeopensource.com/project/elangosundar/awesome-README-templates)
- - [02 VM sous centos 7 avec les rôles ansible et client](https://github.com/matiassingers/awesome-readme)
+ - [01 hyperviseur (virtualbox)]()
+ - [02 VM sous centos 7 avec les rôles ansible et client]()
 
 Le provisionning des 02 VM se fera à l'aide de `vagrant`
 ## 1- Déploiement des VMs et installation de ansible
@@ -515,11 +515,11 @@ ok: [client2]
 PLAY RECAP ******************************************************************************************************************************************
 client2                    : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 
 ```
-`ok=2` : Deux Tâches ont été exécutées `TASK [Gathering Facts]` et `TASK [Website Test]` donc la connexion est ok 
+`ok=2` : Deux Tâches ont été exécutées `TASK [Gathering Facts]` et `TASK [Website Test]` donc la connexion est reussie 
 
-## 4 - Déploiement 
+## 4 - Déploiement du rôle webapp
 
-### 4.1 Test de connectivité à l'hôte du groupe Prod
+### 4.1 - Test de connectivité à l'hôte du groupe Prod
 ```
 ansible prod -i inventory.yml -m ping
 ```
@@ -533,7 +533,7 @@ client2 | SUCCESS => {
     "ping": "pong"
 }
 ```
-### 4.2 Déploiement de Webapp
+### 4.2 - Déploiement de Webapp
 Pour le déploiment nous allons utiliser la commande `ansible-playbook`
 
 Le déploiment se fera sur la base des tâches définies dans le fichier `deploy.yml` et sur les hôtes définis dans le fichier `inventory.yml`. 
@@ -625,7 +625,7 @@ client2                    : ok=12   changed=9    unreachable=0    failed=0    s
 - `changed=9`: 9 tâches ont été exécutées et ont apporté un changement à l'hôte
 - `skipped=1`: 01 tâche n'a pas été exécuté car la condition `when` qui est `false`
 
-## 5 - Test
+## 5 - Test via navigateur
 ![](screenshots/test-webapp.png)
 
 ## Conclusion
