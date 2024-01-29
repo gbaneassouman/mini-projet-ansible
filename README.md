@@ -1,6 +1,6 @@
 Mini Projet Ansible : Créer un rôle webapp
 =============================================
-<img src="screenshots/ansible.jpg" height="120px" weight=800px>
+<img src="screenshots/ansible.png" height="120px" weight=800px>
 
 Vous avez reçu la demande d'une equipe qui souhaiterait utiliser votre playbook webapp, mais sous forme de rôle car sous cette forme ils pourront mieux variabiliser et adapter à leur situation
 
