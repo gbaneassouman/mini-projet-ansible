@@ -1,12 +1,12 @@
-Mini Projet Ansible : Créer votre rôle webapp
+Mini Projet Ansible : Créer un rôle webapp
 =============================================
 <img src="screenshots/ansible.jpg" height="120px" weight=800px>
 
 Vous avez reçu la demande d'une equipe qui souhaiterait utiliser votre playbook webapp, mais sous forme de rôle car sous cette forme ils pourront mieux variabiliser et adapter à leur situation
 
-Leur objectif est que votre rôle possède une playbook tests afin de leur permettre de tester rapidement votre rôle et ainsi l'intégrer à leur process de deploiement.
+Leur objectif est que votre rôle possède un playbook tests afin de leur permettre de tester rapidement votre rôle et ainsi l'intégrer à leur process de déploiement.
 
-Vous aurez donc à:
+Vous la réalisation de ce projet devez:
 - Créer un cluster (1 vm pour Ansible et 1 vm pour client)
 - Créer un rôle permettant de déployer Apache à l'aide de Docker sur le **client**.
 - Utiliser l'image httpd et le port 80 pour l'exposer à l'extérieur 
@@ -99,7 +99,7 @@ if [[ !(-z "$ENABLE_ZSH")  &&  ($ENABLE_ZSH == "true") ]]
 fi
 echo "For this Stack, you will use $(ip -f inet addr show enp0s8 | sed -En -e 's/.*inet ([0-9.]+).*/\1/p') IP Address"
 ```
-### 1.1 Déploiement des VMs (ansible , client1 & client2)
+### 1.1 Déploiement des VMs (ansible , client1)
 -----------------------------------------------------
 Le déploiement se fera avec la commande `vagrant`
 ```
@@ -235,12 +235,24 @@ Passons à l'édition de nos fichiers précédemment crées.
 ```
 ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
 ```
-cet argument aide `ansible` à contrôler les connexions aux machines. mettre cet argument à `no` invite `ssh` à ajouter automatiquement les clés d'hôte dans le fichiers `~/.ssh/known_hosts`. En le faisant ainsi on désactive la validation de la clé au niveau de `l'inventaire` , on peut aussi le faire globalement en ajoutant `host_key_checking = False` dans `/etc/ansible/ansible.cfg` 
+cet argument aide `ansible` à contrôler les connexions aux machines. mettre cet argument à `no` invite `ssh` à ajouter automatiquement les clés d'hôte dans le fichiers `~/.ssh/known_hosts`. En le faisant ainsi on désactive la validation de la clé au niveau de `l'inventaire` , on peut aussi le faire globalement en ajoutant `host_key_checking = False` dans `/etc/ansible/ansible.cfg` ou `ansible.cfg` à la racine du projet
 
 **b - host_vars/client2.yml**
 
-- `client2.yml` c'est dans ce fichier que seront déclarés les variables liés à l'hôte ` client2`, il s'agit de son adresse ip et des paramètres de connexion. on n'a bésoin de spécifier le mot de passe car à l'installation des VMs il y'a eu un échange des clés `SSH`
+- `client2.yml` c'est dans ce fichier que seront déclarés les variables liés à l'hôte ` client2`, il s'agit de son adresse ip et des paramètres de connexion. on n'a pas bésoin de spécifier le mot de passe car à l'installation des VMs il y'a eu un échange des clés `SSH` entre les différentes VMs
 
+```
+ansible: SSH address: 127.0.0.1:2222
+ansible: SSH username: vagrant
+ansible: SSH auth method: private key
+ansible: 
+ansible: Vagrant insecure key detected. Vagrant will automatically replace
+ansible: this with a newly generated keypair for better security.
+ansible: 
+ansible: Inserting generated public key within guest...
+ansible: Removing insecure key from the guest if it's present...
+ansible: Key inserted! Disconnecting and reconnecting using new SSH key...
+```
 
 *copier et coller le contenu ci-dessous*
 ```
@@ -274,7 +286,8 @@ mini-projet-ansible$ ansible-inventory -i inventory.yml --graph
 
 **d - ansible.cfg**
 
-- `ansible.cfg`: c'est le fichier de configuration qui declare comment se comporter dans le projet pour le répertoire en cours. `Ansible` commence par lire dans le répertoire courant pour trouver `ansible.cfg`, s'il ne trouve pas il cherche dans le **home directory** de l'utilisateur courant sinon il cherche dans `/etc/ansible/ansible.cfg`.  `ansible.cfg` dans les projets sera surchargé par la configuration de base `/etc/ansible/ansible.cfg`
+- `ansible.cfg`: Gestion des fichiers de configuration Ansible. C'est le cerveau et le cœur d'Ansible, le fichier qui régit le comportement de toutes les interactions effectuées par le nœud de contrôle.
+`Ansible` commence par lire dans le répertoire courant pour trouver `ansible.cfg`, s'il ne trouve pas il cherche dans le **home directory** de l'utilisateur courant sinon il cherche dans `/etc/ansible/ansible.cfg`.  `ansible.cfg` dans les projets sera surchargé par la configuration de base `/etc/ansible/ansible.cfg`
 > **NB:** `/etc/ansible/ansible.cfg` ne doit être modifier en aucun cas sinon une quelconque modification pourra impacter toute l'insfrastructure
 
 
@@ -307,7 +320,7 @@ deprecation_warnings=False
 ```
 *Points à noter*
 - `hosts`: les hôtes sur lesquels seront exécutées les tâches ici ce sont les hôtes du groupe `prod` 
-- `become`: Permet d'exécuter des tâches avec les privilèges d'un autre user tel que `root`.
+- `become`: Permet d'exécuter des tâches avec les privilèges d'un autre user tel que `root` avec `sudo` ou `su`.
 - `roles`: Permet d'inclure des rôles
 
 
@@ -351,7 +364,6 @@ Un rôle `Ansible` suit une structure de répertoires définie, un rôle est nom
 - `defaults`: contient les variables par défaut pour le rôle.
 - `tasks`: contient les taches à appliquer.
 - `handlers`: contient les handlers, les actions à déclencher.
-
 - `vars`: contient d'autres variables pour le rôle.
 - `files`: contient les fichiers variabilisés à copier sur le serveur cible.
 - `templates`: contient des modèles (jinja2) qui peuvent être déployés via ce rôle.
@@ -374,7 +386,7 @@ apache_port: 80
 file_template: index.html.j2
 ansible_python_interpreter: /usr/bin/python3
 ```
-Dans ce fichier nous avons défini des variables par défaut qui sont:
+
 - `system_user`: l'utilisateur système par défaut
 - `webapp_port`: le port d'écoute au niveau de l'hôte
 - `apache_port`: le port d'écoute au niveau du conteneur
@@ -382,7 +394,7 @@ Dans ce fichier nous avons défini des variables par défaut qui sont:
 - `ansible_python_interpreter`: on défini `python3` comme l'interpreter par défaut
 
 #### 3.4.2 - définition des tâches dans le répertoire tasks
-Nous allons créer les fichiers `centos-setup.yml` et `install-docker.yml` dans le répertoire `tasks` en plus de `main.yml`.
+Nous allons créer les fichiers `centos-setup.yml` et `install-docker.yml` dans le répertoire `tasks` en plus du fichier `main.yml`.
 ```
 $ touch tasks/{centos-setup.yml,install-docker.yml}
 ```
@@ -393,7 +405,7 @@ roles/webapp/tasks/
 ├── install-docker.yml
 └── main.yml
 ```
-- `main.yml` : c'est le fichier principal de nos tâches, dans ce fichier nous feront appel aux tâches définies dans les fichiers `centos-setup.yml` et `install-docker.yml` avec l'argument `include_tasks`. Ces deux tâches vont d'abord préparer le système d'exploitation et installer `docker` sur celui-ci ensuite on procède à la copie de `index.html.j2` et au déploiment du conteneur en se basant sur les valeurs définies dans le fichier `defaults/main.yml`.
+- `main.yml` : c'est le fichier principal de nos tâches, dans ce fichier nous feront appel aux tâches définies dans les fichiers `centos-setup.yml` et `install-docker.yml` avec l'argument `include_tasks`. Ces deux tâches vont d'abord préparer le système d'exploitation ,installer `docker` sur celui-ci ensuite on procède à la copie de `index.html.j2` et au déploiment du conteneur en se basant sur les valeurs définies dans le fichier `defaults/main.yml`.
 
 **contenu de tasks/main.yml**
 ```
@@ -554,7 +566,7 @@ ansible-playbook -i inventory.yml deploy.yml
 
 *Gather Facts* 
 
- cette opération permet d'exécuter le module `setup` pour extraire sur le système d'information des informations telles que la distributon, la version, l'architecture.. 
+ cette opération permet d'exécuter le module `setup` pour extraire des informations sur le système d'exploitation telles que la distributon, la version, l'architecture.. 
 ```
 PLAY [Webapp deployment in Production] **************************************************************************************************************
 
@@ -629,7 +641,7 @@ PLAY RECAP *********************************************************************
 client2                    : ok=12   changed=9    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
 ```
 
-- `ok=12` : 12 tâches ont été exécutées sans erreurs y compris les tâches qui n'ont rien changé et les tâches qui ont changé quelque chose.
+- `ok=12` : 12 tâches ont été exécutées sans erreurs y compris les tâches qui n'ont apporté aucun changement à l'hôte et les tâches qui ont changé quelque chose.
 - `changed=9`: 9 tâches ont été exécutées et ont apporté un changement à l'hôte
 - `skipped=1`: 01 tâche n'a pas été exécuté car la condition `when` qui est `false`
 
