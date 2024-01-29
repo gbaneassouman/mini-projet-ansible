@@ -1,10 +1,18 @@
 Mini Projet Ansible : Créer votre rôle webapp
 =============================================
-<img src="screenshots/ansible.png" height="120px" weight=400px>
+<img src="screenshots/ansible.jpg" height="120px" weight=800px>
 
 Vous avez reçu la demande d'une equipe qui souhaiterait utiliser votre playbook webapp, mais sous forme de rôle car sous cette forme ils pourront mieux variabiliser et adapter à leur situation
 
 Leur objectif est que votre rôle possède une playbook tests afin de leur permettre de tester rapidement votre rôle et ainsi l'intégrer à leur process de deploiement.
+
+Vous aurez donc à:
+- Créer un cluster (1 vm pour Ansible et 1 vm pour client)
+- Créer un rôle permettant de déployer Apache à l'aide de Docker sur le **client**.
+- Utiliser l'image httpd et le port 80 pour l'exposer à l'extérieur 
+- Installer tout prérequis necéssaire à l'aide de yum
+- Vérifier après l'exécution du playbook que Apache est bien disponible sur le port 80 
+ 
 
 
 Prérequis
